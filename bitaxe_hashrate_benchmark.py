@@ -17,8 +17,8 @@ def parse_arguments():
     parser.add_argument('bitaxe_ip', nargs='?', help='IP address of the Bitaxe (e.g., 192.168.2.26)')
     parser.add_argument('-v', '--voltage', type=int, default=1150,
                        help='Initial voltage in mV (default: 1150)')
-    parser.add_argument('-f', '--frequency', type=int, default=500,
-                       help='Initial frequency in MHz (default: 500)')
+    parser.add_argument('-f', '--frequency', type=int, default=525,
+                       help='Initial frequency in MHz (default: 525)')
     
     # If no arguments are provided, print help and exit
     if len(sys.argv) == 1:
@@ -39,20 +39,20 @@ frequency_increment = 25
 benchmark_time = 600          # 10 minutes benchmark time
 sample_interval = 15          # 15 seconds sample interval
 max_temp = 66                 # Will stop if temperature reaches or exceeds this value
-max_allowed_voltage = 1400    # Maximum allowed core voltage
-max_allowed_frequency = 1200  # Maximum allowed core frequency
-max_vr_temp = 86              # Maximum allowed voltage regulator temperature
+max_allowed_voltage = 1300    # Maximum allowed core voltage
+max_allowed_frequency = 1000  # Maximum allowed core frequency
+max_vr_temp = 80             # Maximum allowed voltage regulator temperature
 min_input_voltage = 4800      # Minimum allowed input voltage
 max_input_voltage = 5500      # Maximum allowed input voltage
-max_power = 40                # Max of 40W because of DC plug
+max_power = 35                # Max of 40W because of DC plug
 
 # Add these variables to the global configuration section
 small_core_count = None
 asic_count = None
 
 # Add these constants to the configuration section
-min_allowed_voltage = 1000  # Minimum allowed core voltage
-min_allowed_frequency = 400  # Minimum allowed frequency
+min_allowed_voltage = 1150  # Minimum allowed core voltage
+min_allowed_frequency = 525  # Minimum allowed frequency
 
 # Validate core voltages
 if initial_voltage > max_allowed_voltage:
@@ -89,7 +89,7 @@ def fetch_default_settings():
         response.raise_for_status()
         system_info = response.json()
         default_voltage = system_info.get("coreVoltage", 1150)  # Fallback to 1150 if not found
-        default_frequency = system_info.get("frequency", 500)  # Fallback to 500 if not found
+        default_frequency = system_info.get("frequency", 525)  # Fallback to 500 if not found
         small_core_count = system_info.get("smallCoreCount", 0)
         asic_count = system_info.get("asicCount", 0)
         print(GREEN + f"Current settings determined:\n"
@@ -99,7 +99,7 @@ def fetch_default_settings():
     except requests.exceptions.RequestException as e:
         print(RED + f"Error fetching default system settings: {e}. Using fallback defaults." + RESET)
         default_voltage = 1150
-        default_frequency = 500
+        default_frequency = 525
         small_core_count = 0
         asic_count = 0
 
@@ -171,10 +171,10 @@ def restart_system():
         # Restart here as some bitaxes get unstable with bad settings
         # If not an interrupt, wait 90s for system stabilization as some bitaxes are slow to ramp up
         if not is_interrupt:
-            print(YELLOW + "Applying new settings and waiting 90s for system stabilization..." + RESET)
+            print(YELLOW + "Applying new settings and waiting 30s for system stabilization..." + RESET)
             response = requests.post(f"{bitaxe_ip}/api/system/restart", timeout=10)
             response.raise_for_status()  # Raise an exception for HTTP errors
-            time.sleep(90)  # Allow 90s time for the system to restart and start hashing
+            time.sleep(30)  # Allow 90s time for the system to restart and start hashing
         else:
             print(YELLOW + "Applying final settings..." + RESET)
             response = requests.post(f"{bitaxe_ip}/api/system/restart", timeout=10)
